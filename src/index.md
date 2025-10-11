@@ -2,7 +2,7 @@
 
 ## I hope you are glad to be here
 
-This is not my first time using GitHub, you know :)
+This is not my first time using GitHub! I miss this site.
 
 ---
 
@@ -42,7 +42,7 @@ This is not my first time using GitHub, you know :)
 ---
 
 ## Visual Example
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Data_visualization_process_v1.png/640px-Data_visualization_process_v1.png" alt="Data Visualization Process" width="500"/>
+<img src="https://s3-eu-central-1.amazonaws.com/euc-cdn.freshdesk.com/data/helpdesk/attachments/production/80125162144/original/LYc_NmbLV_lLf-ZQMumImQIfOM1yt5ZhQQ.png?1658772841" alt="Data Visualization Is Cool" width="500"/>
 
 ---
 
