@@ -59,3 +59,47 @@ This is not my first time using GitHub! I miss this site.
     demoText.style.color = picker.value;
   });
 </script>
+
+---
+
+## Observable Input Toast Example
+<div id="observable-input"></div>
+<div id="toast"></div>
+
+<script type="module">
+  import * as Inputs from "https://cdn.jsdelivr.net/npm/@observablehq/inputs@0.10/dist/inputs.js";
+
+  const container = document.getElementById("observable-input");
+  const toast = document.getElementById("toast");
+
+  const input = Inputs.text({
+    label: "Say something:",
+    placeholder: "Type and press Enter",
+    width: "400px"
+  });
+
+  container.appendChild(input);
+
+  input.addEventListener("change", () => {
+    showToast(`You typed: ${input.value}`);
+    input.value = "";
+  });
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.style.visibility = "visible";
+    toast.style.opacity = "1";
+    toast.style.position = "fixed";
+    toast.style.bottom = "30px";
+    toast.style.left = "50%";
+    toast.style.transform = "translateX(-50%)";
+    toast.style.background = "#ff6900";
+    toast.style.color = "#fff";
+    toast.style.padding = "10px 20px";
+    toast.style.borderRadius = "4px";
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      setTimeout(() => (toast.style.visibility = "hidden"), 500);
+    }, 2000);
+  }
+</script>
