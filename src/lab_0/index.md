@@ -46,22 +46,36 @@ This is not my first time using GitHub! I miss this site.
 
 ---
 
-## Vanilla JS
+## Color Picker
 <p>Change the heading color below:</p>
 
-<input type="color" id="colorPicker" value="#ff6900">
-<h3 id="demoText">Interactive Data Visualization Rocks!</h3>
+## 🎨 Interactive Color Picker
 
+```js
+const textColor = view(Inputs.color({
+  label: "Text Color",
+  value: "#ff6900"
+}))
+```
+```html
+Data Viz is <span style="color:${textColor}">colorful</span>!
+```
 ---
 # Observable Table Example
+
 ```js
-Inputs.table(aapl)
+Inputs.table([
+  ["ProductID", "Category", "InStock"],
+  [435, "Apparel", true],
+  [87, "Electronics", false],
+  [912, "Home Goods", false],
+  [330, "Toys", true],
+  [562, "Books", true]
+])
 ```
 # Population Explorer
 
 ```js
-import * as Inputs from "npm:@observablehq/inputs";
-
 const year = view(Inputs.range([1800, 2020], {
   label: "Select Year",
   step: 1,
