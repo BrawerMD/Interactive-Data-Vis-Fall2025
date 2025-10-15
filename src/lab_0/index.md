@@ -46,39 +46,29 @@ This is not my first time using GitHub! I miss this site.
 
 ---
 
-## Interactive Dashboard Element (JS Example)
+## Vanilla JS
 <p>Change the heading color below:</p>
 
 <input type="color" id="colorPicker" value="#ff6900">
 <h3 id="demoText">Interactive Data Visualization Rocks!</h3>
 
 ---
+# Observable Table Example
+```js
+Inputs.table(aapl)
+```
+# Population Explorer
 
-## Observable Input Example
-<div id="observable-input"></div>
+```js
+import * as Inputs from "npm:@observablehq/inputs";
 
-<script>
-  // --- Color picker ---
-  const picker = document.getElementById('colorPicker');
-  const demoText = document.getElementById('demoText');
-  picker.addEventListener('input', () => {
-    demoText.style.color = picker.value;
-  });
+const year = view(Inputs.range([1800, 2020], {
+  label: "Select Year",
+  step: 1,
+  value: 2000
+}));
+```
 
-  // --- Observable input (loaded dynamically) ---
-  (async () => {
-    const { Inputs } = await import("https://cdn.jsdelivr.net/npm/@observablehq/inputs@0.10/dist/inputs.js");
-    const container = document.getElementById("observable-input");
-    const input = Inputs.text({
-      label: "Say something:",
-      placeholder: "Type and press Enter",
-      width: "400px"
-    });
-    container.appendChild(input);
+The population data for your selected year is **${year}**.
 
-    input.addEventListener("change", () => {
-      alert(`You typed: ${input.value}`);
-      input.value = "";
-    });
-  })();
 </script>
