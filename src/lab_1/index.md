@@ -87,8 +87,8 @@ Plot.plot({
   grid: true,
   inset: 10,
   title: "Wing Span & Body Mass (with Average Specimen per Bee Species)",
-  x: {label: "Body Mass (g)"},
-  y: {label: "Wing Span (mm)"},
+  x: { label: "Body Mass (g)" },
+  y: { label: "Wing Span (mm)" },
   color: {
     legend: true,
     label: "Pollinator Species",
@@ -96,13 +96,13 @@ Plot.plot({
     range: ["#f4b400", "#ff6900", "#3366cc"]
   },
   marks: [
-    // All dots (base layer)
+    // All dots
     Plot.dot(data, {
       x: "avg_body_mass_g",
       y: "avg_wing_span_mm",
       fill: "pollinator_species",
       r: 4,
-      opacity: 0.5,
+      opacity: 0.5
     }),
 
     // Highlighted "closest to average" dots
@@ -115,17 +115,32 @@ Plot.plot({
       strokeWidth: 1.5
     }),
 
-    // Replace Honeybee’s highlighted dot with your SVG overlay
+    // Honeybee SVG overlay
     Plot.image(
       closest.filter(d => d.pollinator_species === "Honeybee"),
       {
         x: "avg_body_mass_g",
         y: "avg_wing_span_mm",
-        src: FileAttachment("data/honey.svg"),
+        src: FileAttachment("data/honey.svg").url(),
         width: 40,
         height: 40
       }
     ),
+
+    // 🏷️ Styled two-line labels
+    Plot.text(closest, {
+      x: "avg_body_mass_g",
+      y: "avg_wing_span_mm",
+      dy: -18,
+      text: d =>
+        `${d.pollinator_species}\n${d.avg_wing_span_mm.toFixed(1)} mm, ${d.avg_body_mass_g.toFixed(2)} g`,
+      textAnchor: "middle",
+      fontWeight: "bold",
+      fill: "white",
+      stroke: "black",
+      strokeWidth: 4,
+      paintOrder: "stroke" // ensures the black outline is behind the white fill
+    }),
 
     Plot.frame()
   ]
