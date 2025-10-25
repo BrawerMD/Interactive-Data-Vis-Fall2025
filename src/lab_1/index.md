@@ -90,7 +90,7 @@ Plot.plot({
   x: { label: "Body Mass (g)" },
   y: { label: "Wing Span (mm)" },
   color: {
-    legend: true,
+    legend: false,
     label: "Pollinator Species",
     domain: ["Honeybee", "Bumblebee", "Carpenter Bee"],
     range: ["#f4b400", "#ff6900", "#3366cc"]
@@ -114,19 +114,6 @@ Plot.plot({
       stroke: "black",
       strokeWidth: 1.5
     }),
-
-    // Honeybee SVG overlay
-    Plot.image(
-      closest.filter(d => d.pollinator_species === "Honeybee"),
-      {
-        x: "avg_body_mass_g",
-        y: "avg_wing_span_mm",
-        src: FileAttachment("data/honey.svg").url(),
-        width: 40,
-        height: 40
-      }
-    ),
-
     // 🏷️ Styled two-line labels
     Plot.text(closest, {
       x: "avg_body_mass_g",
@@ -139,16 +126,16 @@ Plot.plot({
       fill: "white",
       stroke: "black",
       strokeWidth: 4,
-      paintOrder: "stroke" // ensures the black outline is behind the white fill
+      paintOrder: "stroke"
     }),
 
     Plot.frame()
   ]
 })
 ```
-
-
-
+### Next we look at weather conditions
+<br>
+Starting with a regression of conditions & temperature on pollinator visits, we see that higher temperatures (but not maximally high) and clouds corrleate with visit count:
 
 
 ```js
@@ -174,68 +161,86 @@ Plot.plot({
   y: {label: "Pollinator Visits"}
 })
 ```
+### Let's go deeper:
+
+Average Visits by Temp:
 ```js
+// 🌡️ Average Visit Count by Temperature (1°C bins)
 Plot.plot({
-  grid: true,
-  x: {label: "Flower Species"},
-  y: {label: "Average Nectar Production (μL)"},
+  width: 800,
+  height: 180,
+  y: {grid: true, label: "Average Visit Count"},
+  x: {label: "Temperature (°C)"},
   marks: [
-    Plot.barY(
-      Plot.groupY({y: "mean"}, data, {
-        x: "flower_species",
-        y: "nectar_production",
-        fill: "#ff6900"
-      })
+    Plot.rectY(
+      data,
+      Plot.binX(
+        {y: "mean"},
+        {x: "temperature", y: "visit_count", fill: "#ffb000"}
+      )
     ),
-    Plot.text(
-      Plot.groupY({text: "mean"}, data, {
-        x: "flower_species",
-        y: "nectar_production",
-        dy: -5,
-        textAnchor: "middle",
-        text: d => d.y.toFixed(2)
-      })
-    )
+    Plot.ruleY([0])
   ]
 })
 ```
+Humidity:
 ```js
-import * as math from "npm:mathjs";
-
-// Convert categorical weather_condition to dummy variables
-const X = [];
-const y = [];
-
-const weatherOptions = [...new Set(data.map(d => d.weather_condition))]; // e.g., ["Sunny","Partly Cloudy","Cloudy"]
-
-for (const d of data) {
-  if (
-    isFinite(d.nectar_production) &&
-    isFinite(d.observation_hour) &&
-    isFinite(d.temperature) &&
-    isFinite(d.humidity) &&
-    isFinite(d.wind_speed)
-  ) {
-    const row = [
-      1, // intercept
-      d.observation_hour,
-      d.temperature,
-      d.humidity,
-      d.wind_speed,
-      ...(weatherOptions.map(w => (d.weather_condition === w ? 1 : 0)))
-    ];
-    X.push(row);
-    y.push(d.nectar_production);
-  }
-}
-
-// Solve (X'X)^-1 X'y
-const XT = math.transpose(X);
-const XTX = math.multiply(XT, X);
-const XTX_inv = math.inv(XTX);
-const XTy = math.multiply(XT, y);
-const coeffs = math.multiply(XTX_inv, XTy);
-
-const headers = ["Intercept", "Hour", "Temp", "Humidity", "Wind", ...weatherOptions];
-Plot.table({columns: ["Variable", "Coefficient"], rows: headers.map((v, i) => ({Variable: v, Coefficient: coeffs[i].toFixed(4)}))})
+// 💧 Average Visit Count by Humidity (1% bins)
+Plot.plot({
+  width: 800,
+  height: 180,
+  y: {grid: true, label: "Average Visit Count"},
+  x: {label: "Humidity (%)"},
+  marks: [
+    Plot.rectY(
+      data,
+      Plot.binX(
+        {y: "mean"},
+        {x: "humidity", y: "visit_count", fill: "#57bb8a"}
+      )
+    ),
+    Plot.ruleY([0])
+  ]
+})
 ```
+Wind Speed:
+```js
+// 🌬️ Average Visit Count by Wind Speed (1 km/h bins)
+Plot.plot({
+  width: 800,
+  height: 180,
+  y: {grid: true, label: "Average Visit Count"},
+  x: {label: "Wind Speed (km/h)"},
+  marks: [
+    Plot.rectY(
+      data,
+      Plot.binX(
+        {y: "mean"},
+        {x: "wind_speed", y: "visit_count", fill: "#4e79a7"}
+      )
+    ),
+    Plot.ruleY([0])
+  ]
+})
+```
+Hour:
+```js
+// 🕐 Average Visit Count by Observation Hour
+Plot.plot({
+  width: 800,
+  height: 180,
+  y: {grid: true, label: "Average Visit Count"},
+  x: {label: "Observation Hour"},
+  marks: [
+    Plot.rectY(
+      data,
+      Plot.binX(
+        {y: "mean"},
+        {x: "observation_hour", y: "visit_count", fill: "#e15759"}
+      )
+    ),
+    Plot.ruleY([0])
+  ]
+})
+```
+Taken together, we can reason that the best conditions for pollinating are **hot, cloudy, moderately humid (65-75% or so), and a breeze less than 4mph. These conditions are commonly found in 12p to 4p, our top hours of the day for pollination.**
