@@ -6,9 +6,9 @@ toc: true
 # Studying Bee Species to Find the Perfect Pollination
 <br>
 
-_Summary: If all we wanted was the top pollination opportunity, we would aim for a gentle breeze, clouds, a hot day, _
+*Summary: If all we wanted was the top pollination opportunity, we would aim for a gentle breeze, clouds, a breeze, moderate humidity, a hot day, a sunflower...*
 
-### First, let's look at our 3 bee species
+### To start, let's look at our 3 bee species
 <br>
 
 We observed...
