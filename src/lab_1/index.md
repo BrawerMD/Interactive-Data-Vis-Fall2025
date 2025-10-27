@@ -6,6 +6,8 @@ toc: true
 # Studying Bee Species to Find the Perfect Pollination
 <br>
 
+_Summary: If all we wanted was the top pollination opportunity, we would aim for a gentle breeze, clouds, a hot day, _
+
 ### First, let's look at our 3 bee species
 <br>
 
@@ -179,7 +181,19 @@ Plot.plot({
         {x: "temperature", y: "visit_count", fill: "#ffb000"}
       )
     ),
-    Plot.ruleY([0])
+    Plot.ruleY([0]),
+    Plot.text(
+      [{x: 29, y: 12, text: "Man it's a hot one"}],
+      {
+        x: "x",
+        y: "y",
+        text: "text",
+        fontWeight: "bold",
+        fill: "#ffffffff",
+        textAnchor: "middle",
+        dy: -5
+      }
+    )
   ]
 })
 ```
@@ -199,7 +213,19 @@ Plot.plot({
         {x: "humidity", y: "visit_count", fill: "#57bb8a"}
       )
     ),
-    Plot.ruleY([0])
+    Plot.ruleY([0]),
+    Plot.text(
+      [{x: 70, y: 8, text: "60-75% humidity"}],
+      {
+        x: "x",
+        y: "y",
+        text: "text",
+        fontWeight: "bold",
+        fill: "#ffffffff",
+        textAnchor: "middle",
+        dy: -5
+      }
+    )
   ]
 })
 ```
@@ -219,7 +245,19 @@ Plot.plot({
         {x: "wind_speed", y: "visit_count", fill: "#4e79a7"}
       )
     ),
-    Plot.ruleY([0])
+    Plot.ruleY([0]),
+    Plot.text(
+      [{x: 3, y: 9, text: "2-4mph please"}],
+      {
+        x: "x",
+        y: "y",
+        text: "text",
+        fontWeight: "bold",
+        fill: "#ffffffff",
+        textAnchor: "middle",
+        dy: -5
+      }
+    )
   ]
 })
 ```
@@ -239,8 +277,81 @@ Plot.plot({
         {x: "observation_hour", y: "visit_count", fill: "#e15759"}
       )
     ),
-    Plot.ruleY([0])
+    Plot.ruleY([0]),
+    Plot.text(
+      [{x: 14, y: 9, text: "12p to 2p is tops"}],
+      {
+        x: "x",
+        y: "y",
+        text: "text",
+        fontWeight: "bold",
+        fill: "#ffffffff",
+        textAnchor: "middle",
+        dy: -5
+      }
+    )
   ]
 })
 ```
 Taken together, we can reason that the best conditions for pollinating are **hot, cloudy, moderately humid (65-75% or so), and a breeze less than 4mph. These conditions are commonly found in 12p to 4p, our top hours of the day for pollination.**
+
+
+<BR>
+
+## And finally, the top nectar producing species is 🌻 **SUNFLOWER!**
+
+```js
+Plot.plot({
+  width: 800,
+  height: 200,
+  y: {grid: true, label: "Average Nectar Production (µL)"},
+  x: {label: "Flower Species"},
+  marks: [
+    // Bars showing average nectar production per species
+    Plot.rectY(
+      data,
+      Plot.groupX(
+        {y: "mean"},
+        {
+          x: "flower_species",
+          y: "nectar_production",
+          fill: d => ({
+            Sunflower: "#ffcc00",   // bright gold
+            Coneflower: "#b03a2e",  // reddish purple
+            Lavender: "#9b59b6"     // lavender purple
+          }[d.flower_species])
+        }
+      )
+    ),
+
+    // Candlestick lines for 95% range
+    // Plot.ruleY(
+    //   data,
+    //   Plot.groupX(
+    //     {
+    //       y1: d => d3.quantile(d.map(d => d.nectar_production), 0.025),
+    //       y2: d => d3.quantile(d.map(d => d.nectar_production), 0.975)
+    //     },
+    //     {x: "flower_species", stroke: "black", strokeWidth: 3}
+    //   )
+    // ),
+
+    // Horizontal zero baseline
+    Plot.ruleY([0]),
+
+    // Annotation pointing to the winner
+    Plot.text(
+      [{x: "Sunflower", y: 1.05, text: "🌻 Sunflower!"}],
+      {
+        x: "x",
+        y: "y",
+        text: "text",
+        fontWeight: "bold",
+        fill: "#ffffffff",
+        textAnchor: "middle",
+        dy: -5
+      }
+    )
+  ]
+})
+```
