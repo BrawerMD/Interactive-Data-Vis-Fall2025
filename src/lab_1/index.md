@@ -324,18 +324,6 @@ Plot.plot({
       )
     ),
 
-    // Candlestick lines for 95% range
-    // Plot.ruleY(
-    //   data,
-    //   Plot.groupX(
-    //     {
-    //       y1: d => d3.quantile(d.map(d => d.nectar_production), 0.025),
-    //       y2: d => d3.quantile(d.map(d => d.nectar_production), 0.975)
-    //     },
-    //     {x: "flower_species", stroke: "black", strokeWidth: 3}
-    //   )
-    // ),
-
     // Horizontal zero baseline
     Plot.ruleY([0]),
 
@@ -349,7 +337,7 @@ Plot.plot({
         fontWeight: "bold",
         fill: "#ffffffff",
         textAnchor: "middle",
-        dy: -5
+        dy: -5 
       }
     )
   ]
