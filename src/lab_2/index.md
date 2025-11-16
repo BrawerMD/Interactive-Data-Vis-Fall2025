@@ -5,7 +5,7 @@ toc: true
 
 # Planning for 2026 with the MTA
 
-## 1: We learned that a subway fare increase may relate to lower ridership
+## We learned that a subway fare increase may relate to lower ridership
 
 To begin. our data adventure, we approached average monthly ridership (defined as entrances into our stations) over the summer. We first look at all stations, then try to clean up a bit by grouping them into categories:
 
@@ -213,7 +213,7 @@ These data show us that ridership declines all summer, which makes sense! New Yo
 
 We cannot infer causality, but this points us toward a conclusion that the fare icnrease alone did not change behavior. With that said, more ideal inference would compare the same months year over year to account for this seasonality.
 
-Could events be driving the change? How?
+## Could events be driving the change? How?
 
 We observe major events raising ridership numbers by aggregating event days and non-event days. A popular station like Union Square may get the most % change from a HUGE event (see the top most bubble in chart 2), whereas even a smaller event like the Fireworks display at West 4th can raise the ridership by nearly 100% as a function of usual ridership:
 
