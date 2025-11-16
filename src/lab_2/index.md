@@ -9,6 +9,8 @@ toc: true
 
 To begin. our data adventure, we approached average monthly ridership (defined as entrances into our stations) over the summer. We first look at all stations, then try to clean up a bit by grouping them into categories:
 
+## Author's note: an improvement would be to normalize to 7 day weeks so as to have cleaner time aggregations that do not partially encompass the fare change.
+
 ```js
 const incidents = FileAttachment("./data/incidents.csv").csv({ typed: true })
 const local_events = FileAttachment("./data/local_events.csv").csv({ typed: true })
@@ -658,3 +660,101 @@ This tells us that Fulton, West 4th, and 23rd are anticipating the most event-ba
 
 ## Bonus: Picking One?
 I said it once and I'll say it again: RIP West 4th, the only entrant to appear in both the bottom of our historical response data (to incidents) AND to be seeing a major event attendance increase next year.
+
+
+# But Wait: There's More
+Upon further review we note that Canal St. and Times Square are not in the local_events data, meaning that our approach to looking specifically at growth may ignore these stations.
+
+For good measure let's look at current staffing vs. Future Events:
+
+
+
+```js
+// Sum attendance for Canal St in 2025 and 2026
+const total2025 = d3.sum(local_events.filter(e => e.nearby_station === "Canal St"), e => e.estimated_attendance ?? 0);
+const total2026 = d3.sum(upcoming_events.filter(e => e.nearby_station === "Canal St"), e => e.expected_attendance ?? 0);
+
+console.log("Canal St - Total Attendance 2025:", total2025);
+console.log("Canal St - Total Attendance 2026:", total2026);
+console.log("Change (2026 - 2025):", total2026 - total2025);
+
+// Loop through all nearby_station entries and log total 2025 attendance per station
+const totals2025 = Array.from(
+  d3.rollup(
+    local_events,
+    v => d3.sum(v, d => d.estimated_attendance ?? 0),
+    d => d.nearby_station
+  ),
+  ([station, total]) => ({ station, total })
+);
+
+for (const { station, total } of totals2025) {
+  console.log(`${station}: ${total}`);
+}
+
+```
+
+```js
+// --- Sum total 2026 event attendance by station ---
+const attendance26 = Array.from(
+  d3.rollup(
+    upcoming_events,
+    v => d3.sum(v, d => d.expected_attendance ?? 0),
+    d => d.nearby_station
+  ),
+  ([station, total]) => ({ station, totalAttendance: total })
+);
+
+// --- Combine with current staffing ---
+const staffCoverage = attendance26.map(d => {
+  const staff = currentStaffing[d.station] ?? 0;
+  const attendeesPerStaff = staff > 0 ? d.totalAttendance / staff : null;
+  return {
+    station: d.station,
+    totalAttendance: d.totalAttendance,
+    staff,
+    attendeesPerStaff
+  };
+}).filter(d => d.attendeesPerStaff !== null);
+
+// --- Sort from best coverage (fewest attendees per staff) to worst ---
+staffCoverage.sort((a, b) => d3.ascending(a.attendeesPerStaff, b.attendeesPerStaff));
+
+// --- Visualization: Staff Coverage Ratio ---
+display(
+  Plot.plot({
+    title: "2026 Event Attendees per Staff Member by Station",
+    marginLeft: 150,
+    height: 600,
+    x: {
+      label: "Attendees per Staff Member",
+      tickFormat: d3.format(",")
+    },
+    y: {
+      label: "Station",
+      domain: staffCoverage.map(d => d.station)
+    },
+    color: {
+      type: "linear",
+      scheme: "YlOrRd",
+      domain: d3.extent(staffCoverage, d => d.attendeesPerStaff),
+      reverse: true,
+      legend: true,
+      label: "Attendees per Staff"
+    },
+    marks: [
+      Plot.ruleX([0]),
+      Plot.barX(staffCoverage, {
+        x: "attendeesPerStaff",
+        y: "station",
+        fill: "attendeesPerStaff",
+        title: d =>
+          `${d.station}\nTotal 2026 Attendance: ${d3.format(",")(d.totalAttendance)}\nStaff: ${d.staff}\nAttendees per Staff: ${d3.format(",.0f")(d.attendeesPerStaff)}`
+      })
+    ]
+  })
+);
+
+```
+
+Ok, twist my arm. Because Canal has unprecedented growth to expect and far and away the most inadequate coverage of staffing to attendees, let's call that our **number one staffing increase choice.**
