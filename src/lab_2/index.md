@@ -121,47 +121,32 @@ const groupedMonthly = Array.from(
 
 display(
   Plot.plot({
-    title: "Average Monthly Entrances by Station",
+    title: "Average Monthly Entrances by Station (Normalized to First Month)",
     height: 500,
-    x: { label: "Month", type: "time" },
-    y: { label: "Average Entrances" },
+    x: { label: "Month", type: "time",      domain: [new Date("2025-05-01"), new Date("2025-08-31")] },
+    y: {
+      label: "Change in Ridership (%)",
+      tickFormat: ((f) => (x) => f((x - 1) * 100))(d3.format("+.0f"))
+    },
     color: { legend: true, label: "Station" },
     marks: [
-      Plot.line(monthlyAvg, { x: "date", y: "avg", stroke: "station" }),
-      Plot.text(monthlyAvg, Plot.selectLast({x: "date", y: "avg", text: "avg"})),
-      Plot.dot(monthlyAvg, {
+      Plot.ruleY([1]),
+      Plot.line(monthlyAvg, Plot.normalizeY("first", {
         x: "date",
         y: "avg",
-        stroke: "station",
-        fill: "station",
-        symbol: "diamond",
-        r: 4,
-        tip: true,
-        title: d => {
-          const fmtMonth = d3.timeFormat("%B");
-          return `${d.station} – ${fmtMonth(d.date)}\nAvg Entrances: ${d3.format(",.0f")(d.avg)}`;
-        }
-      }),
-      Plot.ruleX([new Date("2025-07-15")], {
-        stroke: "red",
-        strokeDasharray: "4,2",
-        strokeWidth: 2,
-        text: "Fare Increase",
-        // marks:[Plot.text()],
-        dy: -10
-      }),
+        stroke: "station"
+      })),
       Plot.text(
-      [{y: 15000, x: new Date("2025-07-15"), text: "July Fare Increase"}],
-      {
-        x: "x",
-        y: "y",
-        text: "text",
-        fontWeight: "bold",
-        fill: "#ffffffff",
-        textAnchor: "middle",
-        dy: -5
-      }
-    )
+        monthlyAvg,
+        Plot.selectLast(Plot.normalizeY("first", {
+          x: "date",
+          y: "avg",
+          z: "station",
+          text: "station",
+          textAnchor: "start",
+          dx: 3
+        }))
+      )
     ]
   })
 );
