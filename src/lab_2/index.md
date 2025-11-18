@@ -9,7 +9,7 @@ toc: true
 
 To begin. our data adventure, we approached average monthly ridership (defined as entrances into our stations) over the summer. We first look at all stations, then try to clean up a bit by grouping them into categories:
 
-## Author's note: an improvement would be to normalize to 7 day weeks so as to have cleaner time aggregations that do not partially encompass the fare change.
+*Author's note: an improvement would be to normalize to 7 day weeks so as to have cleaner time aggregations that do not partially encompass the fare change.*
 
 ```js
 const incidents = FileAttachment("./data/incidents.csv").csv({ typed: true })
