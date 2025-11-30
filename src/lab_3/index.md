@@ -178,9 +178,7 @@ As a New York-based firm, we quickly noticed something about the darker (more re
 <br>
 ---
 
-To follow up on this momentum in said districts, we looked to see how specific event types performed. Binning by type, we see the average attendance of event type in low-income areas.
-
-### We find that Roundtables and Volunteer Trainings are the top two events by average attendance, perhaps pointing to an opportunity to maximize these events when in said districts:
+To follow up on this momentum in said districts, we looked to see how specific event types performed. Binning by type, we see the average attendance of event type in low-income areas:
 
 ```js
 //----------------------------------------------
@@ -251,10 +249,138 @@ const avgAttendancePlot = Plot.plot({
       title: d =>
         `${d.event_type}
 Average Attendance: ${d.avg_attendance.toFixed(1)}`
+    }),
+    Plot.text(avgAttendanceByType,{
+      x: "event_type",
+      y: "avg_attendance",
+      text: (d) => d.avg_attendance.toFixed(0),
+      textAnchor: "end",
+      dx: 10,dy:18,
+      fontWeight:"bold",
+      fontSize:16
     })
   ]
 });
 
 display(avgAttendancePlot);
+
+```
+
+### We find that Roundtables and Volunteer Trainings are the top two events by average attendance, perhaps pointing to an opportunity to maximize these events when in said districts.
+
+```js
+//----------------------------------------------
+// 1. Define survey alignment fields + nice labels
+//----------------------------------------------
+const issueFields = [
+  { key: "affordable_housing_alignment", label: "Housing" },
+  { key: "public_transit_alignment", label: "Transit" },
+  { key: "childcare_support_alignment", label: "Childcare" },
+  { key: "small_business_tax_alignment", label: "Small Biz Tax" },
+  { key: "police_reform_alignment", label: "Police Reform" }
+];
+
+
+//----------------------------------------------
+// 2. Compute average alignment per district per issue
+//----------------------------------------------
+const districtIssueAverages = Array.from(
+  d3.rollups(
+    survey,
+    rows => {
+      // compute mean per issue
+      const avgs = issueFields.map(f => ({
+        key: f.key,
+        label: f.label,
+        avg: d3.mean(rows, r => r[f.key])
+      }));
+
+      // choose the highest alignment issue
+      const topIssue = avgs.reduce((a, b) => (b.avg > a.avg ? b : a));
+
+      return topIssue;
+    },
+    d => d.boro_cd
+  ),
+  ([boro_cd, topIssue]) => ({
+    boro_cd,
+    top_issue_label: topIssue.label,
+    top_issue_avg: topIssue.avg
+  })
+);
+
+
+//----------------------------------------------
+// 3. Join to district centroids
+//----------------------------------------------
+const districtIssueLabels = districtCentroids.map(dc => {
+  const info = districtIssueAverages.find(d => d.boro_cd === dc.boro_cd);
+  return {
+    ...dc,
+    top_issue_label: info?.top_issue_label ?? "",
+    top_issue_avg: info?.top_issue_avg ?? 0
+  };
+});
+
+```
+
+<br>
+
+## What Issues Can We Rely On Next Time? Especially in other Districts
+
+```js
+const topIssueMap = Plot.plot({
+  title: "District’s Highest Policy Alignment (Post-Election Survey)",
+  projection: {
+    domain: districts,
+    type: "mercator"
+  },
+  height: 720,
+  width: 800,
+  color: {
+    type: "ordinal",
+    domain: ["Low", "Middle", "High"],
+    range: ["#d62828", "#fcd34d", "#16a34a"],
+    label: "District Income Tier"
+  },
+  marks: [
+    // --- Base polygons (effort score) ---
+    Plot.geo(districts, {
+      fill: d => {
+        const key = d.properties.BoroCD;
+        return incomeColors[districtStats.get(key)?.income];
+      },
+      stroke: "#f8f9fa",
+      strokeWidth: 0.6,
+      tip: false   // <-- no tooltips anywhere on this map
+    }),
+
+    // --- NEW: text at centroids showing highest-aligned issue ---
+    Plot.text(districtIssueLabels, {
+      x: d => d.coordinates[0],
+      y: d => d.coordinates[1],
+      text: d => d.top_issue_label,
+      fontSize: 10,
+      fill: "black",
+      stroke: "white",
+      strokeWidth: 1,
+      textAnchor: "middle",
+      tip: false
+    })
+  ]
+});
+
+display(topIssueMap);
+
+```
+
+
+```js
+display(
+  survey
+    .filter(d => d.boro_cd === 501)
+    // .slice(0, 20)
+)
+
 
 ```
