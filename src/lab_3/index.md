@@ -142,11 +142,37 @@ Effort score: ${eff.residual.toFixed(0)}`;
       x: d => d.coordinates[0],
       y: d => d.coordinates[1],
       fill: d => incomeColors[d.income],
-      strokeWidth: 0.3,
+      r:4,
     }),
   ]
 });
 
 display(effortScoreMap);
 ```
+```js
+display(Plot.legend({
+  color: {
+    type: "sequential",
+    scheme: "Blues",
+    domain: residualExtent,
+    label: "Excess votes vs expected (residual)"
+  }
+}));
+
+```
+```js
+
+display(Plot.legend({
+  color: {
+    type: "ordinal",
+    domain: ["Low Income", "Middle Income", "High Income"],
+    range: ["#d62828", "#fcd34d", "#16a34a"],
+    
+  }
+}));
+```
+
+As a New York-based firm, we quickly noticed something about the darker (more rewarding) districts. To confirm, we plotted their income category in dots, green through red. We observe an inverse correlation between wealth and marginal value of effort.
+
+### Put simply, we recommend the candidate spend more time in these lower-income areas, followed by middle-income.
 
