@@ -175,4 +175,86 @@ display(Plot.legend({
 As a New York-based firm, we quickly noticed something about the darker (more rewarding) districts. To confirm, we plotted their income category in dots, green through red. We observe an inverse correlation between wealth and marginal value of effort.
 
 ### Put simply, we recommend the candidate spend more time in these lower-income areas, followed by middle-income.
+<br>
+---
 
+To follow up on this momentum in said districts, we looked to see how specific event types performed. Binning by type, we see the average attendance of event type in low-income areas.
+
+### We find that Roundtables and Volunteer Trainings are the top two events by average attendance, perhaps pointing to an opportunity to maximize these events when in said districts:
+
+```js
+//----------------------------------------------
+// 1. Filter to ONLY low-income events
+//----------------------------------------------
+const lowIncomeEvents = events
+  .filter(e => e.income_category === "Low")
+  .sort((a, b) => b.estimated_attendance - a.estimated_attendance);  // descending
+
+
+//----------------------------------------------
+// 2. Create color mapping for event type
+//----------------------------------------------
+const eventTypeColors = {
+  "Community Meeting":      "#1f77b4",
+  "Volunteer Training":     "#ff7f0e",
+  "Rally":                  "#2ca02c",
+  "Roundtable":             "#d62728",
+  "Town Hall":              "#9467bd",
+  "Canvassing Kickoff":     "#8c564b"
+};
+
+const eventTypeList = Object.keys(eventTypeColors);
+
+// 2. Aggregate mean attendance by type
+const avgAttendanceByType = Array.from(
+  d3.rollups(
+    lowIncomeEvents,
+    v => d3.mean(v, d => d.estimated_attendance),
+    d => d.event_type
+  ),
+  ([event_type, avg_attendance]) => ({
+    event_type,
+    avg_attendance
+  })
+).sort((a, b) => b.avg_attendance - a.avg_attendance); // descending
+
+```
+```js
+
+//----------------------------------------------
+// 3. Bar chart: attendance descending
+//----------------------------------------------
+const avgAttendancePlot = Plot.plot({
+  title: "Average Attendance for Events in Low-Income Districts",
+  height: 500,
+  width: 800,
+  marginLeft: 140,
+  x: {
+    label: "Event Type",
+    domain: avgAttendanceByType.map(d => d.event_type),
+  },
+  y: {
+    label: "Average Attendance"
+  },
+  color: {
+    type: "ordinal",
+    domain: eventTypeList,
+    range: eventTypeList.map(t => eventTypeColors[t]),
+    label: "Event Type"
+  },
+  marks: [
+    Plot.barY(avgAttendanceByType, {
+      x: "event_type",
+      y: "avg_attendance",
+      fill: d => eventTypeColors[d.event_type],
+      tip: true,
+      title: d =>
+        `${d.event_type}
+Average Attendance: ${d.avg_attendance.toFixed(1)}`
+    })
+  ]
+});
+
+display(avgAttendancePlot);
+
+```
