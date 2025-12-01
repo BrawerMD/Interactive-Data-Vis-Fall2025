@@ -374,13 +374,39 @@ display(topIssueMap);
 
 ```
 
+It seems that high-income districts like transit policies, followed by our candidates housing policies, if anything. 
+
+Looking further at their polling data we hear voters chime in on their distaste with the candiddate's economic and police reform viewpoints:
+
 
 ```js
-display(
-  survey
-    .filter(d => d.boro_cd === 501)
-    // .slice(0, 20)
-)
+// Join income_category from districtStats onto each survey row
+let surveyWithIncome = survey.map(d => {
+  const base = districtStats.get(d.boro_cd);
+  return {
+    ...d,
+    income_category: base?.income ?? null   // Low / Middle / High
+  };
+});
 
 
 ```
+
+
+```js
+display(Inputs.table(surveyWithIncome.filter(d => d.open_response && d.income_category == "High"), {
+  columns: [
+    "open_response",
+    ],
+  header: {
+    "open_response": "Open Response Comments from High Income Districts",
+  }
+}))
+
+
+```
+
+As such, we recommend a 3-pronged strategy:
+* Put the majority of your time into lower income areas, especially in Roundtables and Volunteer events
+* Focus on playing up Housing and Transit advertising elsewhere, primarily in middle income neighborhoods
+* While high income areas are going to be hardest to break through to, play up public transit in advertising there and try _not_ to allow messaging into disliked wedge issues such as police reform when spending on advertising among the wealthy
