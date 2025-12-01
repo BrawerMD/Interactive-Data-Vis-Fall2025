@@ -21,9 +21,6 @@ To answer this question of how best to use time, we focused our story on the MAR
 We use a regression to create an "effort score", or the value of the time the candidate spent in an district on earning marginal votes. We plot that score here from low (white) to high (blue) and see where effort paid off:
 
 ```js
-//----------------------------------------------
-// 0. Base District Stats (same pattern as working map)
-//----------------------------------------------
 const voteShare = results.map(d => ({
   boro_cd: d.boro_cd,                                  // KEY
   income: d.income_category,
@@ -34,17 +31,12 @@ const voteShare = results.map(d => ({
 
 const districtStats = new Map(voteShare.map(d => [d.boro_cd, d]));
 
-
-//----------------------------------------------
-// 1. Effort Score (residual of votes ~ hours)
-//----------------------------------------------
 const effortData = results.map(d => ({
   boro_cd: d.boro_cd,
   hours: d.candidate_hours_spent,
   votes: d.votes_candidate
 }));
 
-// regression: votes ~ hours
 const meanHours = d3.mean(effortData, d => d.hours);
 const meanVotes = d3.mean(effortData, d => d.votes);
 
@@ -62,17 +54,13 @@ const efficiency = effortData.map(d => {
   return {
     ...d,
     predicted,
-    residual: d.votes - predicted     // >0 = over-performing district
+    residual: d.votes - predicted
   };
 });
 
 const efficiencyMap = new Map(efficiency.map(d => [d.boro_cd, d]));
 const residualExtent = d3.extent(efficiency, d => d.residual);
 
-
-//----------------------------------------------
-// 2. Centroids (same pattern as working chart)
-//----------------------------------------------
 const districtCentroids = districts.features
   .map(feature => {
     const stats = districtStats.get(feature.properties.BoroCD);
@@ -85,13 +73,10 @@ const districtCentroids = districts.features
   .filter(Boolean);
 
 
-//----------------------------------------------
-// 3. Income color palette for centroids
-//----------------------------------------------
 const incomeColors = {
-  Low: "#d62828",      // red
-  Middle: "#fcd34d",   // yellow
-  High: "#16a34a"      // green
+  Low: "#d62828",
+  Middle: "#fcd34d",
+  High: "#16a34a" 
 };
 
 ```
@@ -107,12 +92,11 @@ const effortScoreMap = Plot.plot({
   width: 800,
   color: {
     type: "sequential",
-    scheme: "Blues",            // white → blue
+    scheme: "Blues",
     domain: residualExtent,
     label: "Excess votes vs expected (residual)"
   },
   marks: [
-    // ---- District polygons with tooltip ----
     Plot.geo(districts, {
       fill: d => {
         const key = d.properties.BoroCD;
@@ -137,7 +121,6 @@ Effort score: ${eff.residual.toFixed(0)}`;
       }
     }),
 
-    // ---- Centroid dots (income colors, NO tooltip) ----
     Plot.dot(districtCentroids, {
       x: d => d.coordinates[0],
       y: d => d.coordinates[1],
@@ -181,17 +164,11 @@ As a New York-based firm, we quickly noticed something about the darker (more re
 To follow up on this momentum in said districts, we looked to see how specific event types performed. Binning by type, we see the average attendance of event type in low-income areas:
 
 ```js
-//----------------------------------------------
-// 1. Filter to ONLY low-income events
-//----------------------------------------------
+
 const lowIncomeEvents = events
   .filter(e => e.income_category === "Low")
-  .sort((a, b) => b.estimated_attendance - a.estimated_attendance);  // descending
+  .sort((a, b) => b.estimated_attendance - a.estimated_attendance);
 
-
-//----------------------------------------------
-// 2. Create color mapping for event type
-//----------------------------------------------
 const eventTypeColors = {
   "Community Meeting":      "#1f77b4",
   "Volunteer Training":     "#ff7f0e",
@@ -203,7 +180,7 @@ const eventTypeColors = {
 
 const eventTypeList = Object.keys(eventTypeColors);
 
-// 2. Aggregate mean attendance by type
+
 const avgAttendanceByType = Array.from(
   d3.rollups(
     lowIncomeEvents,
@@ -214,14 +191,12 @@ const avgAttendanceByType = Array.from(
     event_type,
     avg_attendance
   })
-).sort((a, b) => b.avg_attendance - a.avg_attendance); // descending
+).sort((a, b) => b.avg_attendance - a.avg_attendance);
 
 ```
 ```js
 
-//----------------------------------------------
-// 3. Bar chart: attendance descending
-//----------------------------------------------
+
 const avgAttendancePlot = Plot.plot({
   title: "Average Attendance for Events in Low-Income Districts",
   height: 500,
@@ -269,9 +244,7 @@ display(avgAttendancePlot);
 ### We find that Roundtables and Volunteer Trainings are the top two events by average attendance, perhaps pointing to an opportunity to maximize these events when in said districts.
 
 ```js
-//----------------------------------------------
-// 1. Define survey alignment fields + nice labels
-//----------------------------------------------
+
 const issueFields = [
   { key: "affordable_housing_alignment", label: "Housing" },
   { key: "public_transit_alignment", label: "Transit" },
@@ -280,22 +253,16 @@ const issueFields = [
   { key: "police_reform_alignment", label: "Police Reform" }
 ];
 
-
-//----------------------------------------------
-// 2. Compute average alignment per district per issue
-//----------------------------------------------
 const districtIssueAverages = Array.from(
   d3.rollups(
     survey,
     rows => {
-      // compute mean per issue
       const avgs = issueFields.map(f => ({
         key: f.key,
         label: f.label,
         avg: d3.mean(rows, r => r[f.key])
       }));
 
-      // choose the highest alignment issue
       const topIssue = avgs.reduce((a, b) => (b.avg > a.avg ? b : a));
 
       return topIssue;
@@ -309,10 +276,6 @@ const districtIssueAverages = Array.from(
   })
 );
 
-
-//----------------------------------------------
-// 3. Join to district centroids
-//----------------------------------------------
 const districtIssueLabels = districtCentroids.map(dc => {
   const info = districtIssueAverages.find(d => d.boro_cd === dc.boro_cd);
   return {
@@ -344,7 +307,6 @@ const topIssueMap = Plot.plot({
     label: "District Income Tier"
   },
   marks: [
-    // --- Base polygons (effort score) ---
     Plot.geo(districts, {
       fill: d => {
         const key = d.properties.BoroCD;
@@ -352,10 +314,9 @@ const topIssueMap = Plot.plot({
       },
       stroke: "#f8f9fa",
       strokeWidth: 0.6,
-      tip: false   // <-- no tooltips anywhere on this map
+      tip: false
     }),
 
-    // --- NEW: text at centroids showing highest-aligned issue ---
     Plot.text(districtIssueLabels, {
       x: d => d.coordinates[0],
       y: d => d.coordinates[1],
@@ -385,7 +346,7 @@ let surveyWithIncome = survey.map(d => {
   const base = districtStats.get(d.boro_cd);
   return {
     ...d,
-    income_category: base?.income ?? null   // Low / Middle / High
+    income_category: base?.income ?? null
   };
 });
 
