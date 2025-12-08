@@ -13,9 +13,12 @@ const stations = d3.group(wq, d => d.station_name);
 
 ```js
 
+const stationOrder = ["North", "South", "East", "West"];
+
 const color = d3.scaleOrdinal()
-  .domain([...stations.keys()])
-  .range(d3.schemeTableau10);
+  .domain(stationOrder)
+  .range(d3.schemeTableau10.slice(0, stationOrder.length));
+
 
 ```
 # Clearwater CRISIS
@@ -204,10 +207,215 @@ for (const [station, values] of stations) {
 display(svg.node());
 ```
 
-Sure does. The North area of the lake is a constant offender, spikiung in April & October (seasonal) with pollutants.
+Sure does. The North area of the lake is a constant offender, spiking in April & October (seasonal) with pollutants.
 
-With that said, the West area ends up with major heavy metal spikes at the same times, and the East gets a lot of phosphorus contaimation just after.
+With that said, the West area ends up with major heavy metal spikes slighlty earlier, and the East gets a lot of phosphorus contaimation just after.
 
 So which of these pollutants are the problem? We want to know specifically WHAT HAPPENED TO THE FISH! AND WHY?
 
-Let's start with Trout:
+Let's focus on Trout, my favorite:
+
+```js
+const fish = await FileAttachment("data/fish_surveys.csv").csv({typed:true});
+fish.forEach(d => d.date = new Date(d.date));
+
+const speciesGroups = d3.group(fish, d => d.species);
+const speciesColor = d3.scaleOrdinal()
+  .domain([...speciesGroups.keys()])
+  .range(d3.schemeTableau10);
+
+const trout = fish.filter(d => d.species === "Trout");
+const troutByStation = d3.group(trout, d => d.station_id);
+
+```
+```js
+const width = 900;
+const height = 400;
+const margin = {top: 40, right: 80, bottom: 40, left: 60};
+
+const svg = d3.create("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+// Title
+svg.append("text")
+  .attr("x", width/2)
+  .attr("y", margin.top/2)
+  .attr("text-anchor", "middle")
+  .style("font-size", "20px")
+  .style("fill", "white")
+  .style("font-weight", "600")
+  .text("Trout – Average Weight Over Time (by Station)");
+
+// Scales
+const x = d3.scaleUtc()
+  .domain(d3.extent(trout, d => d.date))
+  .range([margin.left, width - margin.right]);
+
+const y = d3.scaleLinear()
+  .domain([400, 500])
+  .range([height - margin.bottom, margin.top]);
+
+
+// Axes
+svg.append("g")
+  .attr("transform", `translate(0,${height - margin.bottom})`)
+  .call(d3.axisBottom(x));
+
+svg.append("g")
+  .attr("transform", `translate(${margin.left},0)`)
+  .call(d3.axisLeft(y));
+
+// Draw lines + points
+for (const [station, values] of troutByStation) {
+  values.sort((a,b) => a.date - b.date);
+
+  // Line
+  svg.append("path")
+    .datum(values)
+    .attr("fill", "none")
+    .attr("stroke", color(station))
+    .attr("stroke-width", 2)
+    .attr("d", d3.line()
+      .x(d => x(d.date))
+      .y(d => y(d.avg_weight_g))
+    );
+
+  // Scatter points
+  svg.append("g")
+    .selectAll("circle")
+    .data(values)
+    .enter()
+    .append("circle")
+      .attr("cx", d => x(d.date))
+      .attr("cy", d => y(d.avg_weight_g))
+      .attr("r", 5)
+      .attr("fill", color(station))
+      .append("title")
+        .text(d =>
+          `${station}
+${d3.timeFormat("%b %Y")(d.date)}
+Avg Weight: ${d.avg_weight_g} g`
+        );
+}
+
+// Legend (top-left)
+const legend = svg.append("g")
+  .attr("transform", `translate(${margin.left + 10}, ${margin.top})`);
+
+["West","South","East","North"].forEach((station, i) => {
+  const g = legend.append("g")
+    .attr("transform", `translate(0, ${i * 20})`);
+
+  g.append("rect")
+    .attr("width", 12)
+    .attr("height", 12)
+    .attr("fill", color(station));
+
+  g.append("text")
+    .attr("x", 18)
+    .attr("y", 10)
+    .style("font-size", "12px")
+    .style("fill", "white")
+    .text(station);
+});
+
+display(svg.node());
+
+```
+_psst: we know the line runs off the min Y axis, it looks catastrophic that way_
+
+```js
+const width = 900;
+const height = 400;
+const margin = {top: 40, right: 80, bottom: 40, left: 60};
+
+const svg = d3.create("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+// Title
+svg.append("text")
+  .attr("x", width/2)
+  .attr("y", margin.top/2)
+  .attr("text-anchor", "middle")
+  .style("font-size", "20px")
+  .style("fill", "white")
+  .style("font-weight", "600")
+  .text("Trout – Count Decline Over Time (by Station)");
+
+const x = d3.scaleUtc()
+  .domain(d3.extent(trout, d => d.date))
+  .range([margin.left, width - margin.right]);
+
+const y = d3.scaleLinear()
+  .domain([0, d3.max(trout, d => d.count)]).nice()
+  .range([height - margin.bottom, margin.top]);
+
+svg.append("g")
+  .attr("transform", `translate(0, ${height - margin.bottom})`)
+  .call(d3.axisBottom(x));
+
+svg.append("g")
+  .attr("transform", `translate(${margin.left},0)`)
+  .call(d3.axisLeft(y));
+
+// Draw lines + scatter per station
+for (const [station, values] of troutByStation) {
+  values.sort((a,b) => a.date - b.date);
+
+  // line
+  svg.append("path")
+    .datum(values)
+    .attr("fill", "none")
+    .attr("stroke", color(station))
+    .attr("stroke-width", 2)
+    .attr("d", d3.line()
+      .x(d => x(d.date))
+      .y(d => y(d.count))
+    );
+
+  // points
+  svg.append("g")
+    .selectAll("circle")
+    .data(values)
+    .enter()
+    .append("circle")
+      .attr("cx", d => x(d.date))
+      .attr("cy", d => y(d.count))
+      .attr("r", 5)
+      .attr("fill", color(station))
+      .append("title")
+        .text(d =>
+          `${station}
+${d3.timeFormat("%b %Y")(d.date)}
+Count: ${d.count}`
+        );
+}
+
+// Legend
+const legend = svg.append("g")
+  .attr("transform", `translate(${margin.left + 10}, ${margin.top})`);
+
+["West","South","East","North"].forEach((station, i) => {
+  const g = legend.append("g")
+    .attr("transform", `translate(0, ${i * 20})`);
+
+  g.append("rect")
+    .attr("width", 12)
+    .attr("height", 12)
+    .attr("fill", color(station));
+
+  g.append("text")
+    .attr("x", 18)
+    .attr("y", 10)
+    .style("font-size", "12px")
+    .style("fill", "white")
+    .text(station);
+});
+
+display(svg.node());
+
+```
+
+Well, I think we should focus on what the West station is finding that kill the trout.
