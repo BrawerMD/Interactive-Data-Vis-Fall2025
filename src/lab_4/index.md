@@ -607,7 +607,7 @@ const shutdowns = [
 
 If we get messy and put it all together:
 
-I notivce that yes, these shutdowns align perfectly with the peak in Heavy Metals.
+I notice that yes, these shutdowns align perfectly with the peak in Heavy Metals.
 
 AND: as research would tell us, the two species most susceptible to HMs -- Bass and Trout (but not Carp) -- are then in decline:
 
@@ -782,4 +782,6 @@ display(svg.node());
 
 ```
 
-Mystery solved: the Clearwater Crisis may be caused in part by ChemTech's behaviors while doing "maintenance" (hmm).
+Mystery solved: the Clearwater Crisis may be caused in part by ChemTech's behaviors while doing "maintenance" (hmm). It seems they shut down just as their heavy metals are peaking (or allow them to peak as part of the shutdown protocol), then they let things die down before they go back to polluting.
+
+Shame, shame, shame!
