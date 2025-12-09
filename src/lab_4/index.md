@@ -60,7 +60,7 @@ svg.append("g")
   .attr("transform", `translate(${margin.left},0)`)
   .call(d3.axisLeft(y));
 
-// lines for each station
+
 for (const [station, values] of stations) {
   svg.append("path")
     .datum(values)
@@ -80,7 +80,7 @@ for (const [station, values] of stations) {
     .style("font-size", "12px")
     .text(station);
 }
-    // ---- Legend ----
+    
 const legend = svg.append("g")
   .attr("transform", `translate(${margin.left + 10}, ${margin.top})`);
 
@@ -97,7 +97,7 @@ Array.from(stations.keys()).forEach((station, i) => {
     .attr("x", 18)
     .attr("y", 10)
     .style("font-size", "12px")
-    .style("fill", "white")   // adjust to your dark background
+    .style("fill", "white")  
     .text(station);
 });
 
@@ -132,7 +132,7 @@ svg.append("g")
   .attr("transform", `translate(${margin.left},0)`)
   .call(d3.axisLeft(y));
 
-// lines for each station
+
 for (const [station, values] of stations) {
   svg.append("path")
     .datum(values)
@@ -182,7 +182,7 @@ svg.append("g")
   .attr("transform", `translate(${margin.left},0)`)
   .call(d3.axisLeft(y));
 
-// lines for each station
+
 for (const [station, values] of stations) {
   svg.append("path")
     .datum(values)
@@ -238,7 +238,7 @@ const svg = d3.create("svg")
   .attr("width", width)
   .attr("height", height);
 
-// Title
+
 svg.append("text")
   .attr("x", width/2)
   .attr("y", margin.top/2)
@@ -248,7 +248,7 @@ svg.append("text")
   .style("font-weight", "600")
   .text("Trout – Average Weight Over Time (by Station)");
 
-// Scales
+
 const x = d3.scaleUtc()
   .domain(d3.extent(trout, d => d.date))
   .range([margin.left, width - margin.right]);
@@ -258,7 +258,7 @@ const y = d3.scaleLinear()
   .range([height - margin.bottom, margin.top]);
 
 
-// Axes
+
 svg.append("g")
   .attr("transform", `translate(0,${height - margin.bottom})`)
   .call(d3.axisBottom(x));
@@ -267,11 +267,11 @@ svg.append("g")
   .attr("transform", `translate(${margin.left},0)`)
   .call(d3.axisLeft(y));
 
-// Draw lines + points
+
 for (const [station, values] of troutByStation) {
   values.sort((a,b) => a.date - b.date);
 
-  // Line
+
   svg.append("path")
     .datum(values)
     .attr("fill", "none")
@@ -282,7 +282,6 @@ for (const [station, values] of troutByStation) {
       .y(d => y(d.avg_weight_g))
     );
 
-  // Scatter points
   svg.append("g")
     .selectAll("circle")
     .data(values)
@@ -300,7 +299,6 @@ Avg Weight: ${d.avg_weight_g} g`
         );
 }
 
-// Legend (top-left)
 const legend = svg.append("g")
   .attr("transform", `translate(${margin.left + 10}, ${margin.top})`);
 
@@ -361,11 +359,10 @@ svg.append("g")
   .attr("transform", `translate(${margin.left},0)`)
   .call(d3.axisLeft(y));
 
-// Draw lines + scatter per station
 for (const [station, values] of troutByStation) {
   values.sort((a,b) => a.date - b.date);
 
-  // line
+
   svg.append("path")
     .datum(values)
     .attr("fill", "none")
@@ -376,7 +373,7 @@ for (const [station, values] of troutByStation) {
       .y(d => y(d.count))
     );
 
-  // points
+  
   svg.append("g")
     .selectAll("circle")
     .data(values)
@@ -394,7 +391,7 @@ Count: ${d.count}`
         );
 }
 
-// Legend
+
 const legend = svg.append("g")
   .attr("transform", `translate(${margin.left + 10}, ${margin.top})`);
 
@@ -448,7 +445,7 @@ const svg = d3.create("svg")
   .attr("width", width)
   .attr("height", height);
 
-// Title
+
 svg.append("text")
   .attr("x", width / 2)
   .attr("y", margin.top / 2)
@@ -458,21 +455,21 @@ svg.append("text")
   .style("fill", "white")
   .text("West Station: Heavy Metals vs Trout Count Over Time");
 
-// X scale
+
 const x = d3.scaleUtc()
-  .domain(d3.extent(westWQ, d => d.date))   // WQ is weekly, so good range
+  .domain(d3.extent(westWQ, d => d.date)) 
   .range([margin.left, width - margin.right]);
 
-// Y scales
-const yLeft = d3.scaleLinear()              // Heavy metals (ppb)
+
+const yLeft = d3.scaleLinear()              
   .domain([0, d3.max(westWQ, d => d.heavy_metals_ppb)]).nice()
   .range([height - margin.bottom, margin.top]);
 
-const yRight = d3.scaleLinear()             // Trout count
+const yRight = d3.scaleLinear()           
   .domain([0, d3.max(westTrout, d => d.count)]).nice()
   .range([height - margin.bottom, margin.top]);
 
-// Axes
+
 svg.append("g")
   .attr("transform", `translate(0,${height - margin.bottom})`)
   .call(d3.axisBottom(x))
@@ -509,7 +506,7 @@ svg.append("g")
     });
 
 
-// Heavy Metals line (red)
+
 svg.append("path")
   .datum(westWQ)
   .attr("fill", "none")
@@ -520,7 +517,7 @@ svg.append("path")
     .y(d => yLeft(d.heavy_metals_ppb))
   );
 
-// Trout count line (blue)
+
 svg.append("path")
   .datum(westTrout)
   .attr("fill", "none")
@@ -531,7 +528,7 @@ svg.append("path")
     .y(d => yRight(d.count))
   );
 
-// Legend
+
 const legend = svg.append("g")
   .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
@@ -562,7 +559,7 @@ display(svg.node());
 The West is plagued by ChemTech Manufacturing (Western Shore): time to figure out what they are up to.
 
 ```js
-// load chemtech-only activities
+
 const chemtech = suspectActivities
   .filter(d => d.suspect === "ChemTech Manufacturing")
   .map(d => ({
@@ -612,19 +609,18 @@ I notice that yes, these shutdowns align perfectly with the peak in Heavy Metals
 AND: as research would tell us, the two species most susceptible to HMs -- Bass and Trout (but not Carp) -- are then in decline:
 
 ```JS
-// -------------------- DATA PREP --------------------
+
 const westFish = fish
   .filter(d => d.station_id === "West")
   .map(d => ({...d, date: new Date(d.date)}));
 
 const speciesGroups = d3.group(westFish, d => d.species);
 
-// Color scale for species
+
 const speciesColor = d3.scaleOrdinal()
   .domain(["Trout", "Bass", "Carp"])
   .range(["steelblue", "orange", "limegreen"]);
 
-// Shutdown events (already prepared)
 const shutdowns = [
   {date:"2023-03-15", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:7, notes:"Quarterly equipment maintenance and cleaning"},
   {date:"2023-06-20", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:8, notes:"Quarterly equipment maintenance and cleaning"},
@@ -639,7 +635,6 @@ const shutdowns = [
   start: new Date(d.date)
 }));
 
-// -------------------- CHART SETUP --------------------
 const width = 900;
 const height = 450;
 const margin = {top: 50, right: 80, bottom: 40, left: 60};
@@ -648,7 +643,6 @@ const svg = d3.create("svg")
   .attr("width", width)
   .attr("height", height);
 
-// -------------------- TITLE --------------------
 svg.append("text")
   .attr("x", width/2)
   .attr("y", margin.top/2)
@@ -658,7 +652,6 @@ svg.append("text")
   .style("fill","white")
   .text("West Station: Fish Count Over Time (All Species)");
 
-// -------------------- SCALES --------------------
 const x = d3.scaleUtc()
   .domain(d3.extent(westFish, d => d.date))
   .range([margin.left, width - margin.right]);
@@ -667,7 +660,6 @@ const y = d3.scaleLinear()
   .domain([0, d3.max(westFish, d => d.count)]).nice()
   .range([height - margin.bottom, margin.top]);
 
-// -------------------- AXES --------------------
 svg.append("g")
   .attr("transform", `translate(0,${height - margin.bottom})`)
   .call(d3.axisBottom(x))
@@ -680,7 +672,6 @@ svg.append("g")
   .selectAll("text")
   .style("fill","white");
 
-// -------------------- SPECIES LINES --------------------
 for (const [species, values] of speciesGroups) {
   values.sort((a,b) => a.date - b.date);
 
@@ -705,7 +696,6 @@ for (const [species, values] of speciesGroups) {
       .attr("fill",speciesColor(species));
 }
 
-// -------------------- VERTICAL SHUTDOWN LINES --------------------
 svg.append("g")
   .selectAll("line.shutdown")
   .data(shutdowns)
@@ -727,7 +717,6 @@ Duration: ${d.duration_days} days
 ${d.notes}`
       );
 
-// -------------------- LABEL ON TOP OF EACH LINE --------------------
 svg.append("g")
   .selectAll("text.shutdown-label")
   .data(shutdowns)
@@ -741,7 +730,6 @@ svg.append("g")
     .style("fill","yellow")
     .text("Shutdown");
 
-    // Heavy Metals line (red)
 svg.append("path")
   .datum(westWQ)
   .attr("fill", "none")
@@ -777,7 +765,6 @@ const legend = svg.append("g")
     .text(item.label);
 });
 
-// -------------------- DISPLAY --------------------
 display(svg.node());
 
 ```
