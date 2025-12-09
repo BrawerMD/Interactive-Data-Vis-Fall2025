@@ -716,7 +716,7 @@ svg.append("g")
     .attr("x2", d => x(d.start))
     .attr("y1", margin.top)
     .attr("y2", height - margin.bottom)
-    .attr("stroke", "red")
+    .attr("stroke", "yellow")
     .attr("stroke-width", 2)
     .attr("stroke-dasharray", "4,2")
     .append("title")
@@ -738,7 +738,7 @@ svg.append("g")
     .attr("y", margin.top - 5)
     .attr("text-anchor","middle")
     .style("font-size","11px")
-    .style("fill","red")
+    .style("fill","yellow")
     .text("Shutdown");
 
     // Heavy Metals line (red)
@@ -759,7 +759,8 @@ const legend = svg.append("g")
   {label:"Trout", color:"steelblue"},
   {label:"Bass",  color:"orange"},
   {label:"Carp",  color:"limegreen"},
-  {label:"Maintenance Shutdown", color:"red"}
+  {label:"Maintenance Shutdown", color:"yellow"},
+  {label:"Heavy Metals", color:"red"}
 ].forEach((item, i) => {
   const g = legend.append("g").attr("transform",`translate(0,${i*20})`);
 
