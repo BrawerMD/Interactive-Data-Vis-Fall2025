@@ -9,6 +9,7 @@ const wq = await FileAttachment("data/water_quality.csv").csv({typed: true});
 wq.forEach(d => d.date = new Date(d.date));
 const stations = d3.group(wq, d => d.station_name);
 
+const suspectActivities = await FileAttachment("data/suspect_activities.csv").csv({typed: true});
 ```
 
 ```js
@@ -418,4 +419,366 @@ display(svg.node());
 
 ```
 
-Well, I think we should focus on what the West station is finding that kill the trout.
+Well, I think we should focus on what the West station is finding that kill the trout. The two steepest declines were also right after major spikes in Heavy Metals. We show how the % change in trout count moves period after priod to see the impact:
+
+```js
+const westWQ = wq.filter(d => d.station_id === "West");
+const westTrout = fish
+  .filter(d => d.species === "Trout" && d.station_id === "West");
+
+westTrout.sort((a, b) => a.date - b.date);
+
+
+for (let i = 1; i < westTrout.length; i++) {
+  const prev = westTrout[i - 1].count;
+  const curr = westTrout[i].count;
+  westTrout[i].pctChange = ((curr - prev) / prev) * 100;
+}
+
+westTrout[0].pctChange = null;
+
+```
+
+```js
+const width = 900;
+const height = 400;
+const margin = {top: 40, right: 80, bottom: 40, left: 60};
+
+const svg = d3.create("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+// Title
+svg.append("text")
+  .attr("x", width / 2)
+  .attr("y", margin.top / 2)
+  .attr("text-anchor", "middle")
+  .style("font-size", "20px")
+  .style("font-weight", "600")
+  .style("fill", "white")
+  .text("West Station: Heavy Metals vs Trout Count Over Time");
+
+// X scale
+const x = d3.scaleUtc()
+  .domain(d3.extent(westWQ, d => d.date))   // WQ is weekly, so good range
+  .range([margin.left, width - margin.right]);
+
+// Y scales
+const yLeft = d3.scaleLinear()              // Heavy metals (ppb)
+  .domain([0, d3.max(westWQ, d => d.heavy_metals_ppb)]).nice()
+  .range([height - margin.bottom, margin.top]);
+
+const yRight = d3.scaleLinear()             // Trout count
+  .domain([0, d3.max(westTrout, d => d.count)]).nice()
+  .range([height - margin.bottom, margin.top]);
+
+// Axes
+svg.append("g")
+  .attr("transform", `translate(0,${height - margin.bottom})`)
+  .call(d3.axisBottom(x))
+  .selectAll("text")
+  .style("fill", "white");
+
+svg.append("g")
+  .attr("transform", `translate(${margin.left},0)`)
+  .call(d3.axisLeft(yLeft))
+  .selectAll("text")
+  .style("fill", "white");
+
+svg.append("g")
+  .attr("transform", `translate(${width - margin.right},0)`)
+  .call(d3.axisRight(yRight))
+  .selectAll("text")
+  .style("fill", "white");
+
+svg.append("g")
+  .selectAll("text.pct")
+  .data(westTrout)
+  .enter()
+  .append("text")
+    .attr("class", "pct")
+    .attr("x", d => x(d.date))
+    .attr("y", d => yRight(d.count) - 10)
+    .attr("text-anchor", "below")
+    .style("font-size", "12px")
+    .style("fill", "white")
+    .text(d => {
+      if (d.pctChange == null) return "";
+      const val = d.pctChange.toFixed(1);
+      return (val > 0 ? "+" : "") + val + "%";
+    });
+
+
+// Heavy Metals line (red)
+svg.append("path")
+  .datum(westWQ)
+  .attr("fill", "none")
+  .attr("stroke", "red")
+  .attr("stroke-width", 2)
+  .attr("d", d3.line()
+    .x(d => x(d.date))
+    .y(d => yLeft(d.heavy_metals_ppb))
+  );
+
+// Trout count line (blue)
+svg.append("path")
+  .datum(westTrout)
+  .attr("fill", "none")
+  .attr("stroke", "steelblue")
+  .attr("stroke-width", 2)
+  .attr("d", d3.line()
+    .x(d => x(d.date))
+    .y(d => yRight(d.count))
+  );
+
+// Legend
+const legend = svg.append("g")
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+const legendItems = [
+  {label: "Heavy Metals (ppb)", color: "red"},
+  {label: "Trout Count", color: "steelblue"}
+];
+
+legendItems.forEach((d, i) => {
+  const g = legend.append("g").attr("transform", `translate(0, ${i * 20})`);
+
+  g.append("rect")
+    .attr("width", 12)
+    .attr("height", 12)
+    .attr("fill", d.color);
+
+  g.append("text")
+    .attr("x", 18)
+    .attr("y", 10)
+    .style("font-size", "12px")
+    .style("fill", "white")
+    .text(d.label);
+});
+
+display(svg.node());
+```
+
+The West is plagued by ChemTech Manufacturing (Western Shore): time to figure out what they are up to.
+
+```js
+// load chemtech-only activities
+const chemtech = suspectActivities
+  .filter(d => d.suspect === "ChemTech Manufacturing")
+  .map(d => ({
+    ...d,
+    date: new Date(d.date),
+    intensity_numeric:
+      d.intensity === "Low" ? 1 :
+      d.intensity === "Medium" ? 2 :
+      3
+  }));
+
+```
+
+
+```js
+Inputs.table(
+  chemtech.map(d => ({
+    date: d.date,
+    activity_type: d.activity_type,
+    intensity: d.intensity,
+    duration_days: d.duration_days,
+    notes: d.notes
+  }))
+)
+```
+```js
+const shutdowns = [
+  {date:"2023-03-15", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:7, notes:"Quarterly equipment maintenance and cleaning"},
+  {date:"2023-06-20", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:8, notes:"Quarterly equipment maintenance and cleaning"},
+  {date:"2023-09-18", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:7, notes:"Quarterly equipment maintenance and cleaning"},
+  {date:"2023-12-10", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:6, notes:"Year-end maintenance shutdown"},
+  {date:"2024-03-12", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:7, notes:"Quarterly equipment maintenance and cleaning"},
+  {date:"2024-06-25", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:9, notes:"Extended maintenance period"},
+  {date:"2024-09-15", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:7, notes:"Quarterly maintenance shutdown"},
+  {date:"2024-12-08", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:8, notes:"Year-end maintenance period"},
+].map(d => ({
+  ...d,
+  start: new Date(d.date),
+  end: new Date(new Date(d.date).getTime() + d.duration_days * 24*60*60*1000)
+}));
+```
+
+If we get messy and put it all together:
+
+I notivce that yes, these shutdowns align perfectly with the peak in Heavy Metals.
+
+AND: as research would tell us, the two species most susceptible to HMs -- Bass and Trout (but not Carp) -- are then in decline:
+
+```JS
+// -------------------- DATA PREP --------------------
+const westFish = fish
+  .filter(d => d.station_id === "West")
+  .map(d => ({...d, date: new Date(d.date)}));
+
+const speciesGroups = d3.group(westFish, d => d.species);
+
+// Color scale for species
+const speciesColor = d3.scaleOrdinal()
+  .domain(["Trout", "Bass", "Carp"])
+  .range(["steelblue", "orange", "limegreen"]);
+
+// Shutdown events (already prepared)
+const shutdowns = [
+  {date:"2023-03-15", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:7, notes:"Quarterly equipment maintenance and cleaning"},
+  {date:"2023-06-20", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:8, notes:"Quarterly equipment maintenance and cleaning"},
+  {date:"2023-09-18", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:7, notes:"Quarterly equipment maintenance and cleaning"},
+  {date:"2023-12-10", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:6, notes:"Year-end maintenance shutdown"},
+  {date:"2024-03-12", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:7, notes:"Quarterly equipment maintenance and cleaning"},
+  {date:"2024-06-25", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:9, notes:"Extended maintenance period"},
+  {date:"2024-09-15", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:7, notes:"Quarterly maintenance shutdown"},
+  {date:"2024-12-08", activity_type:"Maintenance Shutdown", intensity:"High", duration_days:8, notes:"Year-end maintenance period"},
+].map(d => ({
+  ...d,
+  start: new Date(d.date)
+}));
+
+// -------------------- CHART SETUP --------------------
+const width = 900;
+const height = 450;
+const margin = {top: 50, right: 80, bottom: 40, left: 60};
+
+const svg = d3.create("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+// -------------------- TITLE --------------------
+svg.append("text")
+  .attr("x", width/2)
+  .attr("y", margin.top/2)
+  .attr("text-anchor", "middle")
+  .style("font-size","20px")
+  .style("font-weight","600")
+  .style("fill","white")
+  .text("West Station: Fish Count Over Time (All Species)");
+
+// -------------------- SCALES --------------------
+const x = d3.scaleUtc()
+  .domain(d3.extent(westFish, d => d.date))
+  .range([margin.left, width - margin.right]);
+
+const y = d3.scaleLinear()
+  .domain([0, d3.max(westFish, d => d.count)]).nice()
+  .range([height - margin.bottom, margin.top]);
+
+// -------------------- AXES --------------------
+svg.append("g")
+  .attr("transform", `translate(0,${height - margin.bottom})`)
+  .call(d3.axisBottom(x))
+  .selectAll("text")
+  .style("fill","white");
+
+svg.append("g")
+  .attr("transform", `translate(${margin.left},0)`)
+  .call(d3.axisLeft(y))
+  .selectAll("text")
+  .style("fill","white");
+
+// -------------------- SPECIES LINES --------------------
+for (const [species, values] of speciesGroups) {
+  values.sort((a,b) => a.date - b.date);
+
+  svg.append("path")
+    .datum(values)
+    .attr("fill","none")
+    .attr("stroke",speciesColor(species))
+    .attr("stroke-width",2)
+    .attr("d", d3.line()
+      .x(d => x(d.date))
+      .y(d => y(d.count))
+    );
+
+  svg.append("g")
+    .selectAll("circle")
+    .data(values)
+    .enter()
+    .append("circle")
+      .attr("cx", d => x(d.date))
+      .attr("cy", d => y(d.count))
+      .attr("r",5)
+      .attr("fill",speciesColor(species));
+}
+
+// -------------------- VERTICAL SHUTDOWN LINES --------------------
+svg.append("g")
+  .selectAll("line.shutdown")
+  .data(shutdowns)
+  .enter()
+  .append("line")
+    .attr("class","shutdown")
+    .attr("x1", d => x(d.start))
+    .attr("x2", d => x(d.start))
+    .attr("y1", margin.top)
+    .attr("y2", height - margin.bottom)
+    .attr("stroke", "red")
+    .attr("stroke-width", 2)
+    .attr("stroke-dasharray", "4,2")
+    .append("title")
+      .text(d =>
+        `${d.activity_type}
+Intensity: ${d.intensity}
+Duration: ${d.duration_days} days
+${d.notes}`
+      );
+
+// -------------------- LABEL ON TOP OF EACH LINE --------------------
+svg.append("g")
+  .selectAll("text.shutdown-label")
+  .data(shutdowns)
+  .enter()
+  .append("text")
+    .attr("class","shutdown-label")
+    .attr("x", d => x(d.start))
+    .attr("y", margin.top - 5)
+    .attr("text-anchor","middle")
+    .style("font-size","11px")
+    .style("fill","red")
+    .text("Shutdown");
+
+    // Heavy Metals line (red)
+svg.append("path")
+  .datum(westWQ)
+  .attr("fill", "none")
+  .attr("stroke", "red")
+  .attr("stroke-width", 2)
+  .attr("d", d3.line()
+    .x(d => x(d.date))
+    .y(d => yLeft(d.heavy_metals_ppb))
+  );
+// -------------------- LEGEND --------------------
+const legend = svg.append("g")
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+[
+  {label:"Trout", color:"steelblue"},
+  {label:"Bass",  color:"orange"},
+  {label:"Carp",  color:"limegreen"},
+  {label:"Maintenance Shutdown", color:"red"}
+].forEach((item, i) => {
+  const g = legend.append("g").attr("transform",`translate(0,${i*20})`);
+
+  g.append("rect")
+    .attr("width",12)
+    .attr("height",12)
+    .attr("fill",item.color);
+
+  g.append("text")
+    .attr("x",18)
+    .attr("y",10)
+    .style("font-size","12px")
+    .style("fill","white")
+    .text(item.label);
+});
+
+// -------------------- DISPLAY --------------------
+display(svg.node());
+
+```
+
+Mystery solved: the Clearwater Crisis may be caused in part by ChemTech's behaviors while doing "maintenance" (hmm).
